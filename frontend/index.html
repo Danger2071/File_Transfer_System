@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>FileBeam</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  background:#f0f4fa;
+  font-family:'DM Sans',sans-serif;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#1a2a3a;
+}
+
+.card{
+  background:#fff;
+  border-radius:20px;
+  padding:40px 44px;
+  width:100%;
+  max-width:480px;
+  box-shadow:0 4px 32px rgba(30,80,160,.08), 0 1px 4px rgba(30,80,160,.06);
+}
+
+/* HEADER */
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
+.brand{font-family:'DM Serif Display',serif;font-size:1.5rem;color:#1565c0;letter-spacing:-.5px}
+.status{display:flex;align-items:center;gap:7px;font-size:.75rem;font-weight:500;color:#90a4b8}
+.dot{width:7px;height:7px;border-radius:50%;background:#4caf50;flex-shrink:0}
+
+/* FIELDS */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field.full{grid-column:1/-1}
+label{font-size:.78rem;font-weight:600;color:#607080}
+
+input[type=text]{
+  background:#f5f8fc;
+  border:1.5px solid #dde6f0;
+  border-radius:10px;
+  padding:11px 14px;
+  font-family:'DM Sans',sans-serif;
+  font-size:.9rem;
+  color:#1a2a3a;
+  outline:none;
+  transition:border-color .18s, box-shadow .18s;
+}
+input[type=text]::placeholder{color:#b0bec5}
+input[type=text]:focus{border-color:#1976d2;box-shadow:0 0 0 3px rgba(25,118,210,.1)}
+
+/* DROP ZONE */
+.drop{
+  background:#f5f8fc;
+  border:1.5px dashed #c5d5e8;
+  border-radius:12px;
+  padding:28px 20px;
+  text-align:center;
+  cursor:pointer;
+  transition:all .2s;
+}
+.drop:hover,.drop.over{border-color:#1976d2;background:#eef4fc}
+.drop.ready{border-color:#1976d2;border-style:solid;background:#eef4fc}
+.drop-icon{font-size:1.8rem;margin-bottom:8px;display:block;transition:transform .2s}
+.drop:hover .drop-icon{transform:translateY(-3px)}
+.drop p{font-size:.82rem;color:#90a4b8;font-weight:500;transition:color .2s}
+.drop.ready p,.drop:hover p{color:#1976d2}
+.drop .file-name{font-size:.85rem;font-weight:600;color:#1565c0}
+
+/* META */
+.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.meta-item{background:#f5f8fc;border-radius:10px;padding:10px 12px}
+.meta-item .key{font-size:.65rem;font-weight:600;color:#90a4b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.meta-item .val{font-size:.8rem;font-weight:600;color:#1a2a3a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:10px;margin-top:4px}
+.btn-send{
+  flex:1;
+  background:#1976d2;
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  padding:13px;
+  font-family:'DM Sans',sans-serif;
+  font-size:.9rem;
+  font-weight:600;
+  cursor:pointer;
+  transition:background .18s, box-shadow .18s, transform .1s;
+}
+.btn-send:hover{background:#1565c0;box-shadow:0 4px 16px rgba(25,118,210,.3);transform:translateY(-1px)}
+.btn-send:active{transform:translateY(0)}
+.btn-reset{
+  background:#f5f8fc;
+  border:1.5px solid #dde6f0;
+  border-radius:10px;
+  padding:13px 16px;
+  font-size:1rem;
+  cursor:pointer;
+  color:#607080;
+  transition:all .18s;
+  display:flex;align-items:center;justify-content:center;
+}
+.btn-reset:hover{border-color:#1976d2;color:#1976d2;background:#eef4fc}
+
+/* LOG */
+.log{
+  margin-top:16px;
+  background:#f5f8fc;
+  border-radius:10px;
+  padding:12px 14px;
+  min-height:48px;
+  max-height:80px;
+  overflow-y:auto;
+}
+.log-line{font-size:.78rem;color:#90a4b8;line-height:1.8;font-weight:500}
+.log-line.active{color:#1976d2}
+.log-line.ok{color:#43a047;font-weight:600}
+.log-line.err{color:#e53935}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <span class="brand">FileBeam</span>
+    <div class="status"><div class="dot"></div>Connected</div>
+  </div>
+
+  <div class="grid">
+    <div class="field full">
+      <label>Target IP</label>
+      <input type="text" id="ip" placeholder="192.168.0.x"/>
+    </div>
+
+    <div class="field full">
+      <label>File</label>
+      <div class="drop" id="dz" onclick="document.getElementById('fi').click()">
+        <span class="drop-icon">📂</span>
+        <p id="dt">Drop a file here, or click to browse</p>
+        <input type="file" id="fi" hidden onchange="onFile(this)"/>
+      </div>
+    </div>
+  </div>
+
+  <div class="meta">
+    <div class="meta-item"><div class="key">Name</div><div class="val" id="m-name">—</div></div>
+    <div class="meta-item"><div class="key">Size</div><div class="val" id="m-size">—</div></div>
+    <div class="meta-item"><div class="key">Type</div><div class="val" id="m-type">—</div></div>
+    <div class="meta-item"><div class="key">Status</div><div class="val" id="m-stat">Idle</div></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-send" onclick="go()">Send File</button>
+    <button class="btn-reset" onclick="reset()" title="Reset">↺</button>
+  </div>
+
+  <div class="log" id="log">
+    <div class="log-line">Ready to send.</div>
+  </div>
+</div>
+
+<script>
+const dz=document.getElementById('dz');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');if(e.dataTransfer.files.length)setF(e.dataTransfer.files[0])});
+function onFile(i){if(i.files[0])setF(i.files[0])}
+function setF(f){
+  dz.classList.add('ready');
+  document.getElementById('dt').innerHTML=`<span class="file-name">${f.name}</span>`;
+  document.getElementById('m-name').textContent=f.name.length>10?f.name.slice(0,9)+'…':f.name;
+  document.getElementById('m-size').textContent=fmt(f.size);
+  document.getElementById('m-type').textContent=(f.name.split('.').pop()||'bin').toUpperCase();
+  document.getElementById('m-stat').textContent='Ready';
+  log('File ready: '+f.name,'active');
+}
+function fmt(b){return b<1024?b+'B':b<1048576?(b/1024).toFixed(1)+'KB':(b/1048576).toFixed(1)+'MB'}
+function go(){
+  const ip=document.getElementById('ip').value.trim();
+  const port=document.getElementById('port').value.trim()||'8080';
+  if(!ip){log('Please enter a target IP.','err');return}
+  if(!document.getElementById('fi').files[0]){log('Please select a file first.','err');return}
+  document.getElementById('m-stat').textContent='Sending…';
+  log('Connecting to '+ip+':'+port+'…','active');
+  setTimeout(()=>log('Connection established.','active'),700);
+  setTimeout(()=>log('Uploading file…','active'),1400);
+  setTimeout(()=>{log('Done! File sent successfully.','ok');document.getElementById('m-stat').textContent='Sent ✓'},2200);
+}
+function reset(){
+  document.getElementById('ip').value='';
+  document.getElementById('port').value='';
+  document.getElementById('fi').value='';
+  dz.classList.remove('ready','over');
+  document.getElementById('dt').textContent='Drop a file here, or click to browse';
+  document.getElementById('m-name').textContent='—';
+  document.getElementById('m-size').textContent='—';
+  document.getElementById('m-type').textContent='—';
+  document.getElementById('m-stat').textContent='Idle';
+  document.getElementById('log').innerHTML='<div class="log-line">Ready to send.</div>';
+}
+function log(msg,cls){
+  const l=document.getElementById('log');
+  const d=document.createElement('div');
+  d.className='log-line'+(cls?' '+cls:'');
+  d.textContent=msg;
+  l.appendChild(d);
+  l.scrollTop=l.scrollHeight;
+}
+</script>
+</body>
+</html>
