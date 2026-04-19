@@ -118,10 +118,22 @@ int main(void) {
         for (char *p = filename; *p; ++p)
             if (*p == '/' || *p == '\\') base = p + 1;
 
-        printf("[server] Receiving file: %s\n", base);
+        /* If no extension, default to .txt */
+        char final_name[256];
+        strcpy(final_name, base);
+        if (strchr(final_name, '.') == NULL) {
+            strcat(final_name, ".txt");
+        }
 
+        printf("[server] Receiving file: %s\n", final_name);
+
+main
         /*  Step 3: open file and receive data */
         FILE *file = fopen(base, "wb");
+
+        /*  Step 3: open file and receive data  */
+        FILE *file = fopen(final_name, "wb");
+ main
         if (!file) {
             printf("[server] Cannot open '%s' for writing.\n", base);
             closesocket(conn);
@@ -139,7 +151,7 @@ int main(void) {
         fclose(file);
         closesocket(conn);
 
-        printf("[server] Saved '%s' (%ld bytes).\n\n", base, total_bytes);
+        printf("[server] Saved '%s' (%ld bytes).\n\n", final_name, total_bytes);
     }
 
     /* Never reached, but tidy up */
